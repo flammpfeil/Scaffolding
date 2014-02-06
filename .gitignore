@@ -6,3 +6,6 @@
 *.ear
 
 nopublish
+.gradle
+build
+eclipse
