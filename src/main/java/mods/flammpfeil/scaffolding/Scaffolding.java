@@ -12,13 +12,16 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.registry.GameRegistry;
-import cpw.mods.fml.common.registry.LanguageRegistry;
 
-@Mod(name = "Scaffolding", modid = "flammpfeil.scaffolding", useMetadata = false, version = "mc1.7.2 r1")
+@Mod(name = "Scaffolding", modid = "flammpfeil.scaffolding", useMetadata = false, version = "mc1.7.2 r2")
 public class Scaffolding
 {
     public static BlockScaffolding blockScaffolding;
@@ -44,7 +47,7 @@ public class Scaffolding
         }
         */
 
-    	blockScaffolding = (BlockScaffolding)new BlockScaffolding().setHardness(0.1F).setStepSound(Block.soundTypeWood).setBlockName("scaffolding").setBlockTextureName("flammpfeil.scaffolding:sideR").setCreativeTab(CreativeTabs.tabDecorations);
+    	blockScaffolding = (BlockScaffolding)new BlockScaffolding().setHardness(0.1F).setStepSound(Block.soundTypeWood).setBlockName("flammpfeil.scaffolding").setBlockTextureName("flammpfeil.scaffolding:sideR").setCreativeTab(CreativeTabs.tabDecorations);
 
     	blockScaffolding = (BlockScaffolding)GameRegistry.registerBlock(blockScaffolding, ItemBlockScaffolding.class, "scaffolding");
 
@@ -52,20 +55,20 @@ public class Scaffolding
 
         GameRegistry.registerFuelHandler(blockScaffolding);
 
-        LanguageRegistry.instance().addName(blockScaffolding, "Scaffolding");
-        LanguageRegistry.instance().addNameForObject(blockScaffolding, "ja_JP", "足場");
-
         GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(blockScaffolding, 8), "III", "# #", "III",
                                '#', "stickWood",
                                'I', "slabWood"));
 
         GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blockScaffolding, 9), blockScaffolding, "logWood"));
-        GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blockScaffolding, 8), blockScaffolding, "logWood"));
         GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blockScaffolding, 3), blockScaffolding, "plankWood"));
         GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blockScaffolding, 2), blockScaffolding, "slabWood"));
         GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blockScaffolding, 2), blockScaffolding, "stickWood"));
 
-        GameRegistry.addRecipe(new ItemStack(Items.stick, 2), "#", "#", '#', blockScaffolding);
+        GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(blockScaffolding, 1,5), blockScaffolding, "stickWood", "stickWood"));
+
+        GameRegistry.addRecipe(new ItemStack(Items.stick, 2), "#", "#", '#', new ItemStack(blockScaffolding, 1));
+
+        FMLCommonHandler.instance().bus().register(this);
     }
 
     public static boolean isLivingOnLadder(Block block, World world, int x, int y, int z, EntityLivingBase entity)
@@ -95,5 +98,16 @@ public class Scaffolding
         }
 
         return false;
+    }
+
+    static public boolean nowRender = false;
+
+    @SubscribeEvent()
+    public void onTickEventRenderTickEvent(TickEvent.RenderTickEvent event){
+    	if(event.phase == Phase.START){
+    		nowRender = true;
+    	}else{
+    		nowRender = false;
+    	}
     }
 }

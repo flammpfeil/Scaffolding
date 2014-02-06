@@ -20,24 +20,43 @@ public class ItemBlockScaffolding extends ItemBlock
     public ItemBlockScaffolding(Block par1)
     {
         super(par1);
+        this.setMaxDamage(0);
+        this.setHasSubtypes(true);
+    }
+
+
+    @Override
+    public int getMetadata(int par1) {
+    	return par1 == 5? 5 : 0;
     }
 
     @Override
     public ItemStack onItemRightClick(ItemStack par1ItemStack, World par2World,
                                       EntityPlayer par3EntityPlayer)
     {
-        ItemStack item = getItem(par3EntityPlayer, Items.stick);
+    	if(this.getMetadata(par1ItemStack.getItemDamage())==5){
 
-        if (!par2World.isRemote && par3EntityPlayer.isSneaking() && item != null
-                && item.stackSize >= 2
-                && preReinforced(par1ItemStack, par3EntityPlayer, par2World))
-        {
-            par3EntityPlayer.inventory.consumeInventoryItem(item.getItem());
-            par3EntityPlayer.inventory.consumeInventoryItem(item.getItem());
-            par2World.updateEntity(par3EntityPlayer);
-        }
+            if (!par2World.isRemote && par3EntityPlayer.isSneaking()
+                    && preReinforced(par1ItemStack, par3EntityPlayer, par2World))
+            {
+                par2World.updateEntity(par3EntityPlayer);
+            }
 
-        return par1ItemStack;
+            return par1ItemStack;
+    	}else{
+            ItemStack item = getItem(par3EntityPlayer, Items.stick);
+
+            if (!par2World.isRemote && par3EntityPlayer.isSneaking() && item != null
+                    && item.stackSize >= 2
+                    && preReinforced(par1ItemStack, par3EntityPlayer, par2World))
+            {
+                par3EntityPlayer.inventory.consumeInventoryItem(item.getItem());
+                par3EntityPlayer.inventory.consumeInventoryItem(item.getItem());
+                par2World.updateEntity(par3EntityPlayer);
+            }
+
+            return par1ItemStack;
+    	}
     }
 
     private MovingObjectPosition getMovingObjectPosition(World par2World, EntityPlayer par3EntityPlayer)
@@ -258,18 +277,29 @@ public class ItemBlockScaffolding extends ItemBlock
             }
             else
             {
-                ItemStack item = getItem(par2EntityPlayer, Items.stick);
+            	if(this.getMetadata(par1ItemStack.getItemDamage()) == 5){
 
-                if (!par3World.isRemote
-                        && item != null
-                        && item.stackSize >= 2
-                        && preReinforced(par1ItemStack, par2EntityPlayer, par3World))
-                {
-                    par2EntityPlayer.inventory.consumeInventoryItem(item.getItem());
-                    par2EntityPlayer.inventory.consumeInventoryItem(item.getItem());
-                    par3World.updateEntity(par2EntityPlayer);
-                    return false;
-                }
+                    if (!par3World.isRemote
+                            && preReinforced(par1ItemStack, par2EntityPlayer, par3World))
+                    {
+                        par3World.updateEntity(par2EntityPlayer);
+                        return true;
+                    }
+            	}else{
+
+                    ItemStack item = getItem(par2EntityPlayer, Items.stick);
+
+                    if (!par3World.isRemote
+                            && item != null
+                            && item.stackSize >= 2
+                            && preReinforced(par1ItemStack, par2EntityPlayer, par3World))
+                    {
+                        par2EntityPlayer.inventory.consumeInventoryItem(item.getItem());
+                        par2EntityPlayer.inventory.consumeInventoryItem(item.getItem());
+                        par3World.updateEntity(par2EntityPlayer);
+                        return true;
+                    }
+            	}
             }
 
             return super.onItemUse(par1ItemStack, par2EntityPlayer, par3World,
@@ -303,5 +333,11 @@ public class ItemBlockScaffolding extends ItemBlock
 
         return super.placeBlockAt(stack, player, world, x, y, z, side, hitX,
                                   hitY, hitZ, metadata);
+    }
+
+    @Override
+    public String getUnlocalizedName(ItemStack par1ItemStack) {
+    	// TODO 自動生成されたメソッド・スタブ
+    	return super.getUnlocalizedName(par1ItemStack) + (par1ItemStack.getItemDamage() == 5 ? ".reinforced" : "");
     }
 }

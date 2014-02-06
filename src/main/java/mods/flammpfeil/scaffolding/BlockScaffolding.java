@@ -15,6 +15,8 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -38,6 +40,15 @@ public class BlockScaffolding extends Block implements IFuelHandler
         result = ScaffoldingProxy.proxy.isLadder(world, x, y, z, entity, result);
 
         return result;
+    }
+    @Override
+    public MovingObjectPosition collisionRayTrace(World p_149731_1_,
+    		int p_149731_2_, int p_149731_3_, int p_149731_4_,
+    		Vec3 p_149731_5_, Vec3 p_149731_6_) {
+
+    	if(Scaffolding.nowRender)
+    		return null;
+    	return super.collisionRayTrace(p_149731_1_, p_149731_2_, p_149731_3_, p_149731_4_, p_149731_5_, p_149731_6_);
     }
 
     @SideOnly(Side.CLIENT)
@@ -117,7 +128,7 @@ public class BlockScaffolding extends Block implements IFuelHandler
     public ArrayList<ItemStack> getDrops(World world, int x, int y, int z,
     		int metadata, int fortune) {
         ArrayList<ItemStack> ret = new ArrayList<ItemStack>();
-        ret.add(new ItemStack(this, 1));
+        ret.add(new ItemStack(this, 1,0));
 
         if (metadata == 5)
         {
@@ -184,6 +195,16 @@ public class BlockScaffolding extends Block implements IFuelHandler
             }
         }
     }
+
+    @Override
+    public void onBlockPlacedBy(World p_149689_1_, int p_149689_2_,
+    		int p_149689_3_, int p_149689_4_, EntityLivingBase p_149689_5_,
+    		ItemStack p_149689_6_) {
+    	super.onBlockPlacedBy(p_149689_1_, p_149689_2_, p_149689_3_, p_149689_4_,
+    			p_149689_5_, p_149689_6_);
+    	onNeighborBlockChange(p_149689_1_, p_149689_2_, p_149689_3_, p_149689_4_,this);
+    }
+
     @Override
     public int onBlockPlaced(World par1World, int par2,
     		int par3, int par4, int p_149660_5_,
@@ -253,4 +274,5 @@ public class BlockScaffolding extends Block implements IFuelHandler
     {
         return fuel.getItem() == new ItemStack(this).getItem() ? 100 : 0;
     }
+
 }
