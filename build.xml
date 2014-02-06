@@ -1,0 +1,136 @@
+<project name="SpawnStopper" basedir="../" default="test">
+    <property environment="env" />
+    <property file="buildspecs.properties" prefix="buildspecs" />
+
+
+    <property name="mod.version" value="r2" />
+    <property name="mod.modname" value="Scaffolding" />
+
+    <property name="mod.modid" value="scaffolding" />
+    <property name="mod.mydomain" value="flammpfeil" />
+    <property name="mod.fulldomain" value="${mod.mydomain}.${mod.modid}" />
+
+    <property name="mod.packagetarget" value="**/mods/${mod.mydomain}/${mod.modid}/*.class" />
+    <property name="mod.packagetargetasm" value="**/mods/${mod.mydomain}/${mod.modid}/asm/*.class" />
+
+    <condition property="mod.build" value="${env.BUILD_NUMBER}" else="0">
+        <isset property="env.BUILD_NUMBER" />
+    </condition>
+    <property name="mc.version" value="1.7.2" />
+    <property name="forge.version" value="10.12.0.1024" />
+
+    <property name="src.dir" value="${mod.modname}" />
+    <property name="build.dir" value="buildGradle" />
+    <property name="download.dir" value="download" />
+    <property name="jar.dir" value="dist/${mc.version}/${mod.version}-${mod.build}" />
+    <property name="forge.dir" value="${build.dir}" />
+    <property name="mcp.dir" value="${forge.dir}" />
+
+
+    <!-- SubModNames -->
+    <property name="mod.name.base" value="${mod.modname}-${mc.version}-${mod.version}.${mod.build}.jar" />
+
+    <property name="forge.name" value="forge-${mc.version}-${forge.version}-src.zip" />
+
+
+    <!-- Check downloaded dependencies -->
+    <available property="forge-downloaded" file="${download.dir}/${forge.name}" />
+
+
+    <!-- Check installed dependencies -->
+    <property name="build.dependencies.file" value="${build.dir}/dependencies.properties" />
+    <property prefix="build.dependencies" file="${build.dependencies.file}" />
+    <condition property="forge-installed">
+        <equals arg1="${build.dependencies.forge}" arg2="${forge.version}" />
+    </condition>
+
+
+    <!-- Make directories -->
+    <mkdir dir="${build.dir}" />
+    <mkdir dir="${download.dir}" />
+    <mkdir dir="${jar.dir}" />
+
+
+    <!-- Targets for downloading dependencies -->
+    <target name="download-forge" unless="forge-downloaded">
+        <get src="http://files.minecraftforge.net/maven/net/minecraftforge/forge/${mc.version}-${forge.version}/${forge.name}" dest="${download.dir}" usetimestamp="true" />
+    </target>
+
+    <!-- Targets for installing dependencies -->
+    <target name="install-forge" depends="download-forge" unless="forge-installed">
+        <echo message="Deleting old Forge" />
+        <delete dir="${forge.dir}" />
+
+        <condition property="installargs" value=" --no-assets" else="">
+            <or>
+                <isset property="env.TRAVIS" />
+                <isset property="env.BUILD_ID" />
+            </or>
+        </condition>
+
+        <echo message="Installing Forge with args '${installargs}'." />
+        <unzip src="${download.dir}/${forge.name}" dest="${forge.dir}" />
+        <exec dir="${forge.dir}" executable="cmd" osfamily="windows" failonerror="true">
+            <arg value="/c"/>
+            <arg value="gradlew.bat" />
+            <arg value="setupDevWorkspace"/>
+            <arg value="eclipse"/>
+        </exec>
+        <exec dir="${forge.dir}" executable="bash" osfamily="unix" failonerror="true">
+            <arg line="gradlew setupDevWorkspace eclipse" />
+        </exec>
+
+        <echo message="Updating build.dependencies" />
+        <delete file="${build.dependencies.file}" />
+        <propertyfile file="${build.dependencies.file}">
+            <entry key="forge" value="${forge.version}" />
+        </propertyfile>
+    </target>
+
+    <target name="install-dependencies" depends="install-forge" />
+
+    <!-- Targets for building -->
+    <target name="recompile">
+
+        <echo message="Copying source" />
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${mcp.dir}/src">
+            </fileset>
+        </delete>
+        <copy todir="${mcp.dir}/src">
+            <fileset dir="${src.dir}/src" />
+        </copy>
+        <copy todir="${mcp.dir}" overwrite="true">
+            <fileset file="${src.dir}/build.gradle" />
+            <fileset file="${src.dir}/build.bat" />
+        </copy>
+
+
+        <echo message="Recompiling" />
+        <exec dir="${forge.dir}" executable="cmd" osfamily="windows" failonerror="true" resultproperty="recompile.code">
+            <arg value="/c"/>
+            <arg value="build.bat" />
+            <!--<arg value="build" />-->
+        </exec>
+        <exec dir="${forge.dir}" executable="bash" osfamily="unix" failonerror="true" resultproperty="recompile.code">
+            <arg line="gradlew build" />
+        </exec>
+
+        <delete includeemptydirs="true">
+            <fileset dir="${mcp.dir}/src">
+            </fileset>
+        </delete>
+
+        <fail message="Failed to recompile">
+            <condition>
+                <isfailure code="${recompile.code}" />
+            </condition>
+        </fail>
+    </target>
+
+    <target name="test">
+        <antcall target="install-dependencies" />
+        <antcall target="recompile" />
+    </target>
+
+</project>
