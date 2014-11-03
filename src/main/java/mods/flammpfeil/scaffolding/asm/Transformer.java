@@ -22,7 +22,7 @@ public class Transformer implements IClassTransformer , Opcodes
             	System.out.println("start transform scaffolding > ForgeHooks");
                 ClassReader classReader = new ClassReader(bytes);
                 ClassWriter classWriter = new ClassWriter(1);
-                classReader.accept(new forgeHooksVisitor(targetClassName,classWriter), 8);
+                classReader.accept(new forgeHooksVisitor(name,classWriter), 8);
                 return classWriter.toByteArray();
             }
         }
