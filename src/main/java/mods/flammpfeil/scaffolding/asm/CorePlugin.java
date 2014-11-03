@@ -15,7 +15,8 @@ public class CorePlugin implements IFMLLoadingPlugin, IFMLCallHook
     {
         return new String[]
                {
-                   "mods.flammpfeil.scaffolding.asm.Transformer"
+                       "mods.flammpfeil.scaffolding.asm.Transformer",
+                       "mods.flammpfeil.scaffolding.asm.SmartMovingTransformer"
                };
     }
 

@@ -1,6 +1,8 @@
 package mods.flammpfeil.scaffolding;
 
 
+import com.google.common.collect.Lists;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
@@ -10,6 +12,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -21,31 +25,21 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import cpw.mods.fml.common.registry.GameRegistry;
 
+import java.util.List;
+
 @Mod(name = "Scaffolding", modid = "flammpfeil.scaffolding", useMetadata = false, version = "mc1.7.2 r2")
 public class Scaffolding
 {
     public static BlockScaffolding blockScaffolding;
 
-    //public static Configuration mainConfiguration;
+    public static Configuration mainConfiguration;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent evt)
     {
-    	/*
-        mainConfiguration = new Configuration(event.getSuggestedConfigurationFile());
 
-        try
-        {
-            mainConfiguration.load();
-            Property propBlockId;
-            propBlockId = mainConfiguration.get("","Scaffolding", blockId);
-            blockId = propBlockId.getInt();
-        }
-        finally
-        {
-            mainConfiguration.save();
-        }
-        */
+        mainConfiguration = new Configuration(evt.getSuggestedConfigurationFile());
+
 
     	blockScaffolding = (BlockScaffolding)new BlockScaffolding().setHardness(0.1F).setStepSound(Block.soundTypeWood).setBlockName("flammpfeil.scaffolding").setBlockTextureName("flammpfeil.scaffolding:sideR").setCreativeTab(CreativeTabs.tabDecorations);
 
@@ -71,6 +65,51 @@ public class Scaffolding
         FMLCommonHandler.instance().bus().register(this);
     }
 
+    /**
+     * [\] -> [\\]
+     * ["] -> [\quot;]
+     * 改行 -> [\r;\r;]
+     * 全文を""でquotationする
+     * 上記のとおり、エスケープされます。直接configを修正するときに覚えておくべき。
+     * @param source
+     * @return
+     */
+    static private String escape(String source){
+        return String.format("\"%s\"", source.replace("\\","\\\\").replace("\"","\\quot;").replace("\r", "\\r;").replace("\n", "\\n;"));
+    }
+    static private String unescape(String source){
+        return source.replace("\"", "").replace("\\quot;", "\"").replace("\\r;","\r").replace("\\n;","\n").replace("\\\\", "\\");
+    }
+
+    static public List<Block> vineLikeBlocks = Lists.newArrayList();
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent evt){
+        try
+        {
+            mainConfiguration.load();
+
+            String[] strings = new String[]{escape("minecraft:vine"),escape("flammpfeil.scaffolding:scaffolding")};
+
+            Property prop;
+            prop = mainConfiguration.get(Configuration.CATEGORY_GENERAL,"VineLikeBlocks", strings);
+            strings = prop.getStringList();
+
+            for(String name : strings){
+                name = unescape(name);
+                Block block = Block.getBlockFromName(name);
+                if(block == null) continue;
+                if(block == Blocks.air) continue;
+
+                vineLikeBlocks.add(block);
+            }
+
+        }
+        finally
+        {
+            mainConfiguration.save();
+        }
+    }
+
     public static boolean isLivingOnLadder(Block block, World world, int x, int y, int z, EntityLivingBase entity)
     {
     	AxisAlignedBB bb = entity.boundingBox;
@@ -88,7 +127,7 @@ public class Scaffolding
                 	Block curBlock = world.getBlock(x2, y2, z2);
                     if (curBlock.isLadder(world, x2, y2, z2, entity))
                     {
-                        if (curBlock.renderAsNormalBlock() || (x2 == x && z2 == z))
+                        if (curBlock == blockScaffolding || (x2 == x && z2 == z))
                         {
                             return true;
                         }

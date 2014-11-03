@@ -50,19 +50,23 @@ public class BlockScaffolding extends Block implements IFuelHandler
     		return null;
     	return super.collisionRayTrace(p_149731_1_, p_149731_2_, p_149731_3_, p_149731_4_, p_149731_5_, p_149731_6_);
     }
-
     @SideOnly(Side.CLIENT)
     @Override
     public int getRenderBlockPass()
     {
-        return 0;
+        return 1;
+    }
+
+    @Override
+    public boolean canRenderInPass(int pass) {
+        return pass <= 1;
     }
 
     @SideOnly(Side.CLIENT)
     @Override
     public boolean isBlockNormalCube()
     {
-        return true;
+        return false;
     }
 
     @Override
@@ -82,8 +86,8 @@ public class BlockScaffolding extends Block implements IFuelHandler
     @Override
    public boolean isNormalCube(IBlockAccess world, int x, int y, int z)
    {
-    	//ブロック置ける
-       return true;
+        //ブロック置ける
+       return false;
    }
 
     @Override
@@ -92,14 +96,14 @@ public class BlockScaffolding extends Block implements IFuelHandler
     	//1x1ブロックサイズブロックである
         return true;
     }
-    /*
+
     @Override
     public boolean isSideSolid(IBlockAccess world, int x, int y, int z,
     		ForgeDirection side) {
 
         return world.getBlockMetadata(x, y, z) == 5 ? true : (side == ForgeDirection.DOWN) || (side == ForgeDirection.UP);
     }
-    */
+
 
     @Override
     public void addCollisionBoxesToList(World par1World, int par2, int par3, int par4, AxisAlignedBB par5AxisAlignedBB, List par6List, Entity par7Entity)
